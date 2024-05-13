@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Tutorial on Flask: A Web socket example</title>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+ <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.1.2/socket.io.min.js"></script>
+<script type="text/javascript">
+$(document).ready(function() {
+    var socket = io.connect('http://127.0.0.1:5000');  // 커넥션을 여는 코드
+
+    // 커낵션을 열면서 여기에 이미지 전송
+    socket.send({"image": "12345"}); // 처음에 전송되는 값이 여기에 담긴다.
+    socket.on('message', (msg) => {
+        console.log(msg)
+        document.getElementById("log").innerText = JSON.stringify(msg);
+    });
+
+    // 연결 중 이미지 보내는 거 이벤트
+    $('#sendbutton').on('click', function(){
+        var message = $('#messageinput').val(); // 입력 필드에서 메시지 가져오기
+        socket.emit("ingSending", {image: message}); // 서버로 메시지 전송, emit(handler 이름, 보낼 정보)
+    });
+
+    // 연결 해제 버튼 클릭 이벤트
+    $('#disconnect').on('click', function(){
+        var message = $('#messageinput').val(); // 입력 필드에서 메시지 가져오기
+        socket.emit("closeSending", {image: message}); // 서버로 메시지 전송
+    });
+});
+
+
+</script>
+</head>
+</head>
+<body>
+<h1>Example on SocketIO</h1>
+<h2>Message Received:</h2>
+<div id="log"></div>
+<input type="text" id="messageinput" placeholder="Enter your message here">
+<button id="sendbutton">Send</button>
+<button id="disconnect">disconnect</button>
+</body>
+</html>
