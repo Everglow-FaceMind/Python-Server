@@ -114,39 +114,34 @@ def chatting():
 @socketio.on('message')
 def handle_message(json):
     print("start : ", json)
-    image = json.get('image', '')
-    # 📌 심박수 계산하는 함수 작성 (dictionary 형식으로 return 해주세요!)
-    #ex. result = calculate("start", image)
-    processed_image = process_image(image)
-    if processed_image is not None:
-        video_data.append(processed_image)
-        full_video_data.append(processed_image)
-        video_array = np.array(video_data)
-        if len(video_data) >= 150:
-            heart_rate = calculate_hr("start", video_array)
-            print('calculated hr: ', heart_rate)
-            del video_data[:30]
-    result = {'heartrate' : heart_rate}
+    images = json.get('images', [])
+    processed_images = [process_image(image) for image in images]
+    processed_images = [img for img in processed_images if img is not None]
+
+    if processed_images:
+        video_array = np.array(processed_images)
+        heart_rate = calculate_hr("start", video_array)
+        print('calculated hr: ', heart_rate)
+        result = {'heartrate': heart_rate}
+    else:
+        result = {'heartrate': None}
     socketio.send(result) # client에게 메세지 전송
     socketio.sleep(0.5)
 
 # connection 도중에 image 보내기
-@socketio.on('ingSending')
 def example_send(json):
     print("ing : ", json)
-    image = json.get('image', '')
-    # 📌 심박수 계산하는 함수 작성 (dictionary 형식으로 return 해주세요!)
-    #ex. result = calculate("ing", image)
-    processed_image = process_image(image)
-    if processed_image is not None:
-        video_data.append(processed_image)
-        full_video_data.append(processed_image)
-        video_array = np.array(video_data)
-        if len(video_data) >= 150:
-            heart_rate = calculate_hr("ing",video_array)
-            print('calculated hr: ', heart_rate)
-            del video_data[:30]
-    result = {'heartrate' : heart_rate}
+    images = json.get('images', [])
+    processed_images = [process_image(image) for image in images]
+    processed_images = [img for img in processed_images if img is not None]
+    
+    if processed_images:
+        video_array = np.array(processed_images)
+        heart_rate = calculate_hr("ing", video_array)
+        print('calculated hr: ', heart_rate)
+        result = {'heartrate': heart_rate}
+    else:
+        result = {'heartrate': None}
     socketio.send(result) # client에게 메세지 전송
     socketio.sleep(0.5)
 
@@ -154,27 +149,32 @@ def example_send(json):
 @socketio.on('closeSending')
 def disconnect_socket(json):
     print("close :", json)
-    image = json.get('image', '')
-    # 📌 최종결과 계산하는 함수 작성 (dictionary 형식으로 return 해주세요!)
-    #ex. result = calculate("end", image)
-    processed_image = process_image(image)
-    if processed_image is not None:
-        video_data.append(processed_image)
-        full_video_data_array = np.array(full_video_data)
-        full_video_data.append(processed_image)
-        heart_rate = calculate_hr("end", full_video_data)
+    images = json.get('images', [])
+    processed_images = [process_image(image) for image in images]
+    processed_images = [img for img in processed_images if img is not None]
+
+    if processed_images:
+        video_array = np.array(processed_images)
+        heart_rate = calculate_hr("end", video_array)
         print('calculated hr: ', heart_rate)
-        video_data.pop(0)
-    min_hr = min(heart_rate)
-    max_hr = max(heart_rate)
-    mean_hr = np.mean(heart_rate)
-    stress_index = calculate_SI(full_video_data_array, fps = 30)
-    result = {
-        "min_hr" : min_hr,
-        "max_hr" : max_hr,
-        "mean_hr" : mean_hr,
-        "stress_index" : stress_index
-    }
+        min_hr = min(heart_rate)
+        max_hr = max(heart_rate)
+        mean_hr = np.mean(heart_rate)
+        stress_index = calculate_SI(video_array, fps=30)
+        result = {
+            "min_hr": min_hr,
+            "max_hr": max_hr,
+            "mean_hr": mean_hr,
+            "stress_index": stress_index
+        }
+    else:
+        result = {
+            "min_hr": None,
+            "max_hr": None,
+            "mean_hr": None,
+            "stress_index": None
+        }
+        
     socketio.send(result)
     socketio.sleep(0.5)
     disconnect() # 연결 해제
