@@ -121,6 +121,7 @@ def handle_message(json):
     if processed_images:
         video_array = np.array(processed_images)
         heart_rate = calculate_hr("start", video_array)
+        full_video_data.extend(processed_images)
         print('calculated hr: ', heart_rate)
         result = {'heartrate': heart_rate}
     else:
@@ -138,6 +139,7 @@ def example_send(json):
     if processed_images:
         video_array = np.array(processed_images)
         heart_rate = calculate_hr("ing", video_array)
+        full_video_data.extend(processed_images)
         print('calculated hr: ', heart_rate)
         result = {'heartrate': heart_rate}
     else:
@@ -155,12 +157,13 @@ def disconnect_socket(json):
 
     if processed_images:
         video_array = np.array(processed_images)
-        heart_rate = calculate_hr("end", video_array)
+        full_video_data.extend(processed_images)
+        heart_rate = calculate_hr("end", full_video_data)
         print('calculated hr: ', heart_rate)
         min_hr = min(heart_rate)
         max_hr = max(heart_rate)
         mean_hr = np.mean(heart_rate)
-        stress_index = calculate_SI(video_array, fps=30)
+        stress_index = calculate_SI(np.array(full_video_data), fps=30)
         result = {
             "min_hr": min_hr,
             "max_hr": max_hr,
